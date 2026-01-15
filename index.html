@@ -8,10 +8,10 @@
 <style>
   *{box-sizing:border-box;}
   body,html{margin:0;padding:0;width:100%;height:100vh;background:#111;font-family:sans-serif;overflow:hidden;}
-  .filter-bar{position:fixed;top:0;left:0;width:100%;z-index:1000;padding:10px;background:rgba(0,0,0,0.8);backdrop-filter:blur(15px);display:flex;gap:8px;}
-  select{flex:1;padding:12px;border-radius:10px;background:#fff;border:none;font-size:14px;font-weight:bold;text-align:center;outline:none;}
-  .outer-swiper{width:100%;height:100vh;}
-  .lecture-card{position:relative;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;padding:40px;color:#fff;background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);}
+  .filter-bar{position:fixed;top:0;left:0;width:100%;z-index:1000;padding:8px 10px;background:rgba(0,0,0,0.85);backdrop-filter:blur(15px);display:flex;gap:8px;}
+  select{flex:1;padding:10px;border-radius:8px;background:#fff;border:none;font-size:13px;font-weight:bold;text-align:center;outline:none;}
+  .outer-swiper{width:100%;height:100vh;padding-top:60px;}
+  .lecture-card{position:relative;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;padding:30px 25px;color:#fff;background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);}
   .venue-slide:nth-child(even) .lecture-card{background:linear-gradient(135deg, #2c3e50 0%, #000000 100%);}
   .badge-container{display:flex;gap:8px;margin-bottom:15px;}
   .badge{padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.2);font-size:12px;border:1px solid rgba(255,255,255,0.3);}
@@ -20,7 +20,7 @@
   .time-info{font-size:26px;font-weight:800;margin-bottom:20px;}
   .title{font-size:28px;font-weight:900;line-height:1.3;word-break:keep-all;white-space:pre-wrap;margin-bottom:40px;}
   .nav-guide{position:absolute;bottom:30px;left:0;width:100%;text-align:center;font-size:12px;opacity:0.5;}
-  .next-tag{position:absolute;top:80px;right:30px;background:#ff3b30;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:bold;animation:pulse 2s infinite;}
+  .next-tag{position:absolute;top:20px;right:25px;background:#ff3b30;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:bold;animation:pulse 2s infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
   #no-data{position:fixed;top:0;left:0;width:100%;height:100%;display:none;justify-content:center;align-items:center;color:#888;z-index:100;background:#111;}
 </style>
