@@ -31,7 +31,7 @@
     var isPM = t.indexOf("오후") > -1;
     var time = t.replace("오전","").replace("오후","").trim();
     var parts = time.split(":");
-    var h = parseInt(parts[0]);
+    var h = parseInt(parts[0] || 0);
     var m = parseInt(parts[1] || 0);
     if(isPM && h < 12) h += 12;
     if(!isPM && h === 12) h = 0;
@@ -59,12 +59,12 @@
         var slide = document.createElement("div");
         slide.className = "swiper-slide";
         var content = "";
-        if(idx === 0 && filtered.length > 0) content += '<div class="next-badge">NEXT</div>';
-        content += '<div class="badge">양산시 문화강좌</div>';
-        content += '<div class="day-info">' + item.d + "요일 강좌</div>';
-        content += '<div class="time-info">' + item.s + " - " + item.e + "</div>';
-        content += '<div class="title">' + item.t + "</div>';
-        content += '<div class="room">📍 ' + item.r + "</div>';
+        if(idx === 0 && filtered.length > 0) content += "<div class='next-badge'>NEXT</div>";
+        content += "<div class='badge'>양산시 문화강좌</div>";
+        content += "<div class='day-info'>" + item.d + "요일 강좌</div>";
+        content += "<div class='time-info'>" + item.s + " - " + item.e + "</div>";
+        content += "<div class='title'>" + item.t + "</div>";
+        content += "<div class='room'>📍 " + item.r + "</div>";
         slide.innerHTML = content;
         wrapper.appendChild(slide);
       });
