@@ -64,6 +64,13 @@
     if(h12 === 0) h12 = 12;
     return period + " " + h12 + ":" + (m < 10 ? "0" + m : m);
   }
+  function getNextStartMin(lectures, curMin){
+    for(var i=0; i<lectures.length; i++){
+      var startMin = toMin(lectures[i].s);
+      if(startMin > curMin) return startMin;
+    }
+    return 9999;
+  }
   function render(dayFilter, locFilter){
     var now = new Date();
     var curDStr = "일월화수목금토"[now.getDay()];
@@ -73,7 +80,27 @@
     });
     var groups = {};
     filtered.forEach(function(item){ if(!groups[item.r]) groups[item.r] = []; groups[item.r].push(item); });
-    var venueList = Object.keys(groups).sort();
+    var venueList = Object.keys(groups);
+    venueList.forEach(function(vName){
+      groups[vName].sort(function(a,b){ return toMin(a.s) - toMin(b.s); });
+    });
+    if(dayFilter === curDStr){
+      venueList.sort(function(a, b){
+        var aNext = getNextStartMin(groups[a], curMin);
+        var bNext = getNextStartMin(groups[b], curMin);
+        if(aNext === 9999 && bNext === 9999) return a.localeCompare(b);
+        if(aNext === 9999) return 1;
+        if(bNext === 9999) return -1;
+        return aNext - bNext;
+      });
+    } else {
+      venueList.sort(function(a, b){
+        var aFirst = toMin(groups[a][0].s);
+        var bFirst = toMin(groups[b][0].s);
+        if(aFirst !== bFirst) return aFirst - bFirst;
+        return a.localeCompare(b);
+      });
+    }
     var oWrapper = document.getElementById("venue-wrapper");
     oWrapper.innerHTML = "";
     if(venueList.length === 0) {
@@ -83,7 +110,7 @@
       var vSlide = document.createElement("div"); vSlide.className = "swiper-slide venue-slide";
       var iSwiper = document.createElement("div"); iSwiper.className = "swiper inner-swiper";
       var iWrapper = document.createElement("div"); iWrapper.className = "swiper-wrapper";
-      var lectures = groups[vName].sort(function(a,b){ return toMin(a.s) - toMin(b.s); });
+      var lectures = groups[vName];
       var startIdx = 0;
       var foundFuture = false;
       if(dayFilter === curDStr){
