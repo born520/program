@@ -3,34 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>양산시 문화강좌 스마트 가이드</title>
+<title>양산시 문화강좌 가이드</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <style>
   *{box-sizing:border-box;}
   body,html{margin:0;padding:0;width:100%;height:100vh;background:#111;font-family:sans-serif;overflow:hidden;}
-  .filter-bar{position:fixed;top:0;left:0;width:100%;z-index:1000;padding:10px;background:rgba(0,0,0,0.8);backdrop-filter:blur(15px);display:flex;justify-content:center;}
-  select{width:90%;padding:12px;border-radius:10px;background:#fff;border:none;font-size:16px;font-weight:bold;text-align:center;}
+  .filter-bar{position:fixed;top:0;left:0;width:100%;z-index:1000;padding:10px;background:rgba(0,0,0,0.8);backdrop-filter:blur(15px);display:flex;gap:8px;}
+  select{flex:1;padding:12px;border-radius:10px;background:#fff;border:none;font-size:14px;font-weight:bold;text-align:center;}
   .outer-swiper{width:100%;height:100vh;}
+  .venue-slide{width:100%;height:100%;}
+  .inner-swiper{width:100%;height:100%;}
   .lecture-card{position:relative;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;padding:40px;color:#fff;background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);}
   .venue-slide:nth-child(even) .lecture-card{background:linear-gradient(135deg, #2c3e50 0%, #000000 100%);}
   .badge-container{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap;}
   .badge{padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.2);font-size:12px;border:1px solid rgba(255,255,255,0.3);}
-  .capacity-badge{background:#ff9500;color:#000;font-weight:bold;border:none;}
+  .cap-badge{background:#ff9500;color:#000;font-weight:bold;border:none;}
   .day-info{font-size:18px;color:#ffcc00;font-weight:bold;margin-bottom:5px;}
   .time-info{font-size:26px;font-weight:800;margin-bottom:20px;}
   .title{font-size:28px;font-weight:900;line-height:1.3;word-break:keep-all;white-space:pre-wrap;margin-bottom:40px;}
   .nav-guide{position:absolute;bottom:30px;left:0;width:100%;text-align:center;font-size:13px;opacity:0.6;animation:fade 2s infinite;}
   @keyframes fade{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
-  .next-tag{position:absolute;top:80px;right:30px;background:#ff3b30;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:bold;}
+  .now-tag{position:absolute;top:80px;right:30px;background:#ff3b30;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:bold;}
   #no-data{position:fixed;top:0;left:0;width:100%;height:100%;display:none;justify-content:center;align-items:center;color:#888;z-index:100;background:#111;}
 </style>
 </head>
 <body>
-<div id="no-data">운영 중인 강좌가 없습니다.</div>
-<div class="filter-bar"><select id="day-select">
-  <option value="월">월요일 시간표</option><option value="화">화요일 시간표</option><option value="수">수요일 시간표</option>
-  <option value="목">목요일 시간표</option><option value="금">금요일 시간표</option><option value="토">토요일 시간표</option><option value="일">일요일 시간표</option>
-</select></div>
+<div id="no-data">해당 조건에 운영 중인 강좌가 없습니다.</div>
+<div class="filter-bar">
+  <select id="day-select">
+    <option value="월">월요일</option><option value="화">화요일</option><option value="수">수요일</option>
+    <option value="목">목요일</option><option value="금">금요일</option><option value="토">토요일</option><option value="일">일요일</option>
+  </select>
+  <select id="loc-select"><option value="전체">모든 장소</option></select>
+</div>
 <div class="swiper outer-swiper"><div class="swiper-wrapper" id="venue-wrapper"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
@@ -46,11 +51,17 @@
     if(pm && h < 12) h += 12; if(!pm && h === 12) h = 0;
     return h * 60 + m;
   }
-  function render(dayFilter){
+  function render(dayFilter, locFilter){
     var now = new Date();
     var curDStr = "일월화수목금토"[now.getDay()];
     var curMin = now.getHours() * 60 + now.getMinutes();
-    var filtered = rawData.filter(function(v){ return v.d === dayFilter; });
+    // 1. 요일 및 장소 필터링
+    var filtered = rawData.filter(function(v){ 
+      var dMatch = (v.d === dayFilter);
+      var lMatch = (locFilter === "전체" || v.r === locFilter);
+      return dMatch && lMatch;
+    });
+    // 2. 장소별 그룹화
     var groups = {};
     filtered.forEach(function(item){ if(!groups[item.r]) groups[item.r] = []; groups[item.r].push(item); });
     var venueList = Object.keys(groups).sort();
@@ -64,6 +75,7 @@
       var iSwiper = document.createElement("div"); iSwiper.className = "swiper inner-swiper";
       var iWrapper = document.createElement("div"); iWrapper.className = "swiper-wrapper";
       var lectures = groups[vName].sort(function(a,b){ return toMin(a.s) - toMin(b.s); });
+      // 시간 포커스 로직 (오늘인 경우 현재 시간 이후로)
       var startIdx = 0;
       if(dayFilter === curDStr){
         for(var j=0; j<lectures.length; j++){ if(toMin(lectures[j].s) >= curMin - 10) { startIdx = j; break; } }
@@ -71,15 +83,15 @@
       lectures.forEach(function(lc, idx){
         var lSlide = document.createElement("div"); lSlide.className = "swiper-slide";
         var content = "<div class='lecture-card'>";
-        if(dayFilter === curDStr && idx === startIdx) content += "<div class='next-tag'>곧 시작 / 진행중</div>";
+        if(dayFilter === curDStr && idx === startIdx) content += "<div class='now-tag'>지금 또는 다음</div>";
         content += "<div class='badge-container'>";
         content += "<div class='badge'>" + lc.r + "</div>";
-        if(lc.p) content += "<div class='badge capacity-badge'>정원: " + lc.p + "명</div>";
+        if(lc.p) content += "<div class='badge cap-badge'>정원: " + lc.p + "명</div>";
         content += "</div>";
         content += "<div class='day-info'>" + lc.d + "요일 강좌</div>";
         content += "<div class='time-info'>" + lc.s + " - " + lc.e + "</div>";
         content += "<div class='title'>" + lc.t + "</div>";
-        content += "<div class='nav-guide'>↕ 다른 장소  /  ↔ 다른 시간</div>";
+        content += "<div class='nav-guide'>↕ 다른 장소  /  ↔ 같은 장소 다른 시간</div>";
         content += "</div>";
         lSlide.innerHTML = content; iWrapper.appendChild(lSlide);
       });
@@ -91,28 +103,31 @@
   }
   function initApp(){
     var dSel = document.getElementById("day-select");
+    var lSel = document.getElementById("loc-select");
     var now = new Date();
     var curD = now.getDay();
     var curMin = now.getHours() * 60 + now.getMinutes();
     var dayOrder = ["일", "월", "화", "수", "목", "금", "토"];
+    // 장소 목록 추출
+    var locs = [];
+    rawData.forEach(function(v){ if(locs.indexOf(v.r) === -1) locs.push(v.r); });
+    locs.sort().forEach(function(loc){ var opt = document.createElement("option"); opt.value = loc; opt.innerText = loc; lSel.appendChild(opt); });
     var targetDay = "";
-    // 1. 오늘부터 일주일간 루프 돌며 가장 빠른 강좌 요일 찾기
+    // 스마트 스킵: 오늘부터 일주일 중 가장 가까운 강좌일 찾기
     for(var i=0; i<7; i++){
-      var checkIdx = (curD + i) % 7;
-      var checkName = dayOrder[checkIdx];
-      var dayData = rawData.filter(function(v){ return v.d === checkName; });
-      if(dayData.length === 0) continue;
+      var cIdx = (curD + i) % 7;
+      var cName = dayOrder[cIdx];
+      var dData = rawData.filter(function(v){ return v.d === cName; });
+      if(dData.length === 0) continue;
       if(i === 0){
-        var remaining = dayData.filter(function(v){ return toMin(v.s) >= curMin - 10; });
-        if(remaining.length > 0){ targetDay = checkName; break; }
-      } else {
-        targetDay = checkName; break;
-      }
+        var remain = dData.filter(function(v){ return toMin(v.s) >= curMin - 10; });
+        if(remain.length > 0){ targetDay = cName; break; }
+      } else { targetDay = cName; break; }
     }
-    if(!targetDay) targetDay = "월"; // 하나도 없으면 월요일 강제 지정
+    if(!targetDay) targetDay = "월";
     dSel.value = targetDay;
-    dSel.onchange = function(){ render(dSel.value); };
-    render(targetDay);
+    dSel.onchange = lSel.onchange = function(){ render(dSel.value, lSel.value); };
+    render(targetDay, "전체");
   }
   window.onload = initApp;
 </script>
