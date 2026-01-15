@@ -41,16 +41,28 @@
   var outerSwiper = null;
   function toMin(t){
     if(!t) return 0;
-    var clean = t.replace(/\s/g, "");
-    var isPM = clean.includes("오후");
-    var isAM = clean.includes("오전");
-    var time = clean.replace("오전","").replace("오후","");
-    var p = time.split(":");
-    var h = parseInt(p[0] || 0);
-    var m = parseInt(p[1] || 0);
-    if(isPM && h < 12) h += 12; 
+    var str = String(t).replace(/\s+/g, "");
+    var isPM = str.indexOf("오후") !== -1;
+    var isAM = str.indexOf("오전") !== -1;
+    str = str.replace("오전","").replace("오후","");
+    var parts = str.split(":");
+    var h = parseInt(parts[0], 10) || 0;
+    var m = parseInt(parts[1], 10) || 0;
     if(isAM && h === 12) h = 0;
+    if(isPM && h !== 12) h += 12;
     return h * 60 + m;
+  }
+  function formatTime(t){
+    if(!t) return "";
+    var str = String(t).replace(/\s+/g, "");
+    if(str.indexOf("오전") !== -1 || str.indexOf("오후") !== -1) return t;
+    var parts = str.split(":");
+    var h = parseInt(parts[0], 10) || 0;
+    var m = parseInt(parts[1], 10) || 0;
+    var period = h < 12 ? "오전" : "오후";
+    var h12 = h % 12;
+    if(h12 === 0) h12 = 12;
+    return period + " " + h12 + ":" + (m < 10 ? "0" + m : m);
   }
   function render(dayFilter, locFilter){
     var now = new Date();
@@ -75,8 +87,13 @@
       var startIdx = 0;
       var foundFuture = false;
       if(dayFilter === curDStr){
-        for(var j=0; j<lectures.length; j++){ 
-          if(toMin(lectures[j].s) > curMin) { startIdx = j; foundFuture = true; break; } 
+        for(var j=0; j<lectures.length; j++){
+          var startMin = toMin(lectures[j].s);
+          if(startMin > curMin) {
+            startIdx = j;
+            foundFuture = true;
+            break;
+          }
         }
       }
       lectures.forEach(function(lc, idx){
@@ -88,7 +105,7 @@
         if(lc.p) content += "<div class='badge cap-badge'>정원: " + lc.p + "명</div>";
         content += "</div>";
         content += "<div class='day-info'>" + lc.d + "요일 강좌</div>";
-        content += "<div class='time-info'>" + lc.s + " - " + lc.e + "</div>";
+        content += "<div class='time-info'>" + formatTime(lc.s) + " - " + formatTime(lc.e) + "</div>";
         content += "<div class='title'>" + lc.t + "</div>";
         content += "<div class='nav-guide'>↕ 장소 변경 / ↔ 시간대 확인</div>";
         content += "</div>";
@@ -117,7 +134,10 @@
       var dData = rawData.filter(function(v){ return v.d === cName; });
       if(dData.length === 0) continue;
       if(i === 0){
-        var futureOnes = dData.filter(function(v){ return toMin(v.s) > curMin; });
+        var futureOnes = dData.filter(function(v){
+          var startMin = toMin(v.s);
+          return startMin > curMin;
+        });
         if(futureOnes.length > 0){ targetDay = cName; break; }
       } else { targetDay = cName; break; }
     }
