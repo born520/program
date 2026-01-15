@@ -7,10 +7,10 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <style>
   *{box-sizing:border-box;}
-  body,html{margin:0;padding:0;width:100%;height:100vh;background:#111;font-family:sans-serif;overflow:hidden;}
-  .filter-bar{position:fixed;top:0;left:0;width:100%;z-index:1000;padding:8px 10px;background:rgba(0,0,0,0.85);backdrop-filter:blur(15px);display:flex;gap:8px;}
+  body,html{margin:0;padding:0;width:100%;height:100%;background:#111;font-family:sans-serif;overflow:hidden;}
+  .filter-bar{position:fixed;top:0;left:0;width:100%;z-index:1000;padding:8px 10px;background:rgba(0,0,0,0.95);backdrop-filter:blur(15px);display:flex;gap:8px;height:56px;}
   select{flex:1;padding:10px;border-radius:8px;background:#fff;border:none;font-size:13px;font-weight:bold;text-align:center;outline:none;}
-  .outer-swiper{width:100%;height:calc(100vh - 56px);margin-top:56px;}
+  .outer-swiper{position:fixed;top:56px;left:0;width:100%;height:calc(100% - 56px);}
   .lecture-card{position:relative;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;padding:30px 25px;color:#fff;background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);}
   .venue-slide:nth-child(even) .lecture-card{background:linear-gradient(135deg, #2c3e50 0%, #000000 100%);}
   .badge-container{display:flex;gap:8px;margin-bottom:15px;}
