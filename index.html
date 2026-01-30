@@ -8,7 +8,7 @@
 <style>
   *{box-sizing:border-box;} body,html{margin:0;padding:0;width:100%;height:100%;background:#111;font-family:sans-serif;overflow:hidden;}
   .filter-bar{position:fixed;top:0;left:0;width:100%;z-index:1000;padding:8px 10px;background:rgba(0,0,0,0.9);backdrop-filter:blur(15px);display:flex;gap:8px;height:56px;}
-  select{flex:1;padding:10px;border-radius:8px;background:#fff;border:none;font-size:13px;font-weight:bold;outline:none;}
+  select{flex:1;padding:10px;border-radius:8px;background:#fff;border:none;font-size:13px;font-weight:bold;outline:none; appearance:none; -webkit-appearance:none; text-align:center;}
   .outer-swiper{position:fixed;top:56px;left:0;width:100%;height:calc(100% - 56px);}
   .lecture-card{position:relative;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;padding:30px 25px;color:#fff;background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);}
   .venue-slide:nth-child(even) .lecture-card{background:linear-gradient(135deg, #2c3e50 0%, #000000 100%);}
@@ -24,7 +24,7 @@
 </style>
 </head>
 <body>
-<div id="loading">임박한 주변 강좌 분석 중...</div>
+<div id="loading">주변 강좌를 즉시 분석 중...</div>
 <div class="filter-bar"><select id="day-select"></select><select id="loc-select"><option value="전체">모든 장소</option></select></div>
 <div class="swiper outer-swiper"><div class="swiper-wrapper" id="venue-wrapper"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
@@ -37,16 +37,12 @@
   function getDist(l1,n1,l2,n2){ var R=6371,dLat=(l2-l1)*Math.PI/180,dLon=(n2-n1)*Math.PI/180,a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(l1*Math.PI/180)*Math.cos(l2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2); return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); }
   function render(day, loc){
     var now = new Date(), curMin = now.getHours()*60 + now.getMinutes(), curDStr = "일월화수목금토"[now.getDay()];
-    var groups = {};
-    rawData.forEach(function(v){
-      if(v.d !== day || (loc !== "전체" && v.r !== loc)) return;
-      if(!groups[v.r]) groups[v.r]=[]; groups[v.r].push(v);
-    });
+    var groups = {}; rawData.forEach(function(v){ if(v.d !== day || (loc !== "전체" && v.r !== loc)) return; if(!groups[v.r]) groups[v.r]=[]; groups[v.r].push(v); });
     var venueList = Object.keys(groups);
     venueList.sort(function(a, b){
       var getNextMin = function(vName) {
         var nexts = groups[vName].filter(v => toMin(v.s) > curMin).sort((x,y) => toMin(x.s)-toMin(y.s));
-        return nexts.length > 0 ? toMin(nexts[0].s) : 9999; // 강좌 없으면 뒤로 밀기
+        return nexts.length > 0 ? toMin(nexts[0].s) : 9999; 
       };
       var timeA = getNextMin(a), timeB = getNextMin(b);
       if (timeA !== timeB) return timeA - timeB;
@@ -70,7 +66,6 @@
         if(!isPast && idx === sIdx && day === curDStr) html += "<div class='next-tag'>임박 강좌</div>";
         html += "<div class='badge-container'><div class='badge'>"+lc.r+"</div>";
         if(dist) html += "<div class='badge dist-badge'>" + dist + "</div></div>";
-        if(isPast) html += "<div style='font-size:12px; margin-bottom:10px; opacity:0.7;'>[종료된 강좌]</div>";
         html += "<div class='time-info'>"+formatTime(lc.s)+" - "+formatTime(lc.e)+"</div>";
         html += "<div class='title'>"+lc.t+"</div><div class='nav-guide'>↕ 시간 임박순 장소 / ↔ 이전 강좌 확인</div></div>";
         var s = document.createElement("div"); s.className = "swiper-slide"; s.innerHTML = html; iWrapper.appendChild(s);
@@ -81,12 +76,19 @@
     if(outerSwiper) outerSwiper.destroy(); outerSwiper = new Swiper(".outer-swiper", { direction: "vertical" });
     document.getElementById("loading").style.display = "none";
   }
+  function handleSelection() {
+    var dSel = document.getElementById("day-select");
+    var lSel = document.getElementById("loc-select");
+    render(dSel.value, lSel.value);
+    document.activeElement.blur(); // 포커스 해제로 모바일 완료버튼 대체
+  }
   window.onload = function(){
     var dSel = document.getElementById("day-select"), lSel = document.getElementById("loc-select"), dayNm = ["일","월","화","수","목","금","토"], now = new Date(), curD = now.getDay();
     dayNm.forEach(function(n,i){ var o=document.createElement("option"); o.value=n; o.innerText=n+"요일"; if(i===curD)o.selected=true; dSel.appendChild(o); });
     var locs = []; rawData.forEach(function(v){ if(!locs.includes(v.r)) locs.push(v.r); }); locs.sort().forEach(function(l){ var o=document.createElement("option"); o.value=l; o.innerText=l; lSel.appendChild(o); });
     dSel.value = dayNm[curD];
-    dSel.onchange = lSel.onchange = function(){ render(dSel.value, lSel.value); };
+    dSel.addEventListener("change", handleSelection);
+    lSel.addEventListener("change", handleSelection);
     render(dSel.value, "전체");
     if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(function(p){ userCoords={lat:p.coords.latitude, lng:p.coords.longitude}; render(dSel.value, lSel.value); }, function(){ document.getElementById("loading").style.display="none"; }, {timeout:5000}); }
   };
